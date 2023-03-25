@@ -8,9 +8,13 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name="televisions")
 public class Television {
+
+    //An entity must have a primary key (id)
     @Id
     @GeneratedValue
     private Long id;
+
+    //Variable declarations (fields)
     private String type;
     private String brand;
     private String name;
@@ -28,8 +32,10 @@ public class Television {
     private Integer originalStock;
     private Integer sold;
 
-    public Television(){
+    //No constuctors actually needed, however these can be added.
 
+    //Default constructor
+    public Television(){
     }
 
     public Television(Long id, String type, String brand) {
@@ -38,6 +44,7 @@ public class Television {
         this.brand = brand;
     }
 
+    //Getters and Setters
     public Long getId() {
         return id;
     }

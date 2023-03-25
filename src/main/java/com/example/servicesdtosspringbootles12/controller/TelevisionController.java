@@ -1,63 +1,94 @@
 package com.example.servicesdtosspringbootles12.controller;
 
 import com.example.servicesdtosspringbootles12.Dtos.TelevisionDto;
-import com.example.servicesdtosspringbootles12.model.Television;
+import com.example.servicesdtosspringbootles12.Dtos.TelevisionInputDto;
 import com.example.servicesdtosspringbootles12.services.TelevisionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/television")
 public class TelevisionController {
-  //  @Autowired is possible but constructor injection is preferred.
+
+  // @Autowired is possible but constructor injection is preferred.
     //Connect the controller with the service layer:
     private final TelevisionService service;
 
-    //Create the constructor with service as a parameter to link the controller with the service layer.
+    //Create the constructor with service as a parameter to link the controller with the service layer. This will be done in the repository as well.
     public TelevisionController(TelevisionService service) {
         this.service = service;
     }
 
-    //Define a method getAllTelevisions which returns a list of TelevisionDTOs through an HTTP-response.
+
+    //Define a  GET method getAllTelevisions which returns a list of TelevisionDTOs through an HTTP-response based on the query parameter "brand".
+    // If no brand is given then all televisions are returned instead of the televisions of the given brand.
+    //Please note that now the return is a TelevisionDto instead of a Television.
     @GetMapping
-    public ResponseEntity<List<TelevisionDto>> getAllTelevisions() {
-        //The service.getTelevisions() method is used to retrieve a list of all televisions from the database.
-        List<TelevisionDto> televisions = service.getTelevisions();
+    public ResponseEntity<List<TelevisionDto>> getAllTelevisions(@RequestParam(value = "brand", required = false)Optional<String>brand) {
+
+        List<TelevisionDto> televisionDtos;
+
+        if(brand.isEmpty()){
+            //Pull the list of Televisions from the service rather than the repository.
+            televisionDtos = service.getTelevisions();
+        }
+        else{
+            //IDEM
+            televisionDtos = service.getAllTelevisionsByBrand(brand.get());
+        }
         //Include the list in an HTTP response with status OK.
-        return new ResponseEntity<>(televisions, HttpStatus.OK);
+        return new ResponseEntity<>(televisionDtos, HttpStatus.OK);
     }
 
-    //Definieer de GET-methode getTelevisionById(Long id), die één televisie-DTO retourneert op basis van het id in een HTTP-respons van het type ResponseEntity<Television>.
-    // Hierbij wordt de service.getTelevision(id)-methode gebruikt om de televisie-DTO op te halen met het opgegeven id uit de database en deze wordt vervolgens opgenomen in de HTTP-respons met HTTP-status OK.
+
+    //Define a GET method getTelevisionById(Long id), which returns one televisionDTO based on the id given by the client in the HTTP request.
     @GetMapping("/{id}")
     public ResponseEntity<TelevisionDto> getTelevisionById(@PathVariable Long id) {
+
+        //We call the service instead of the repository.
         TelevisionDto television = service.getTelevision( id);
-            return new ResponseEntity<>( HttpStatus.OK);
+
+            return new ResponseEntity<>( television,HttpStatus.OK);
     }
 
-    //Definieer de PUT-methode updateTelevision(int id, TelevisionDto dto), die de gegevens van een bestaande televisie bijwerkt en een HTTP-respons van het type ResponseEntity<String> retourneert.
-    // Hierbij wordt de service.updateTelevision(id, dto)-methode gebruikt om de televisie met het opgegeven id bij te werken in de database en er wordt een boodschap "Television has been updated successfully" opgenomen in de HTTP-respons met HTTP-status OK.
+
+    //Define a PUT-method updateTelevision(), which amends the details of an existing Television and  returns an HTTP-respons of the type ResponseEntity<TelevisionDto>.
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateTelevision(@PathVariable Long id, @RequestBody TelevisionDto dto) {
-        service.updateTelevision(id, dto);
-            return new ResponseEntity<>( "Television has been updated successfully", HttpStatus.OK);
+    public ResponseEntity<TelevisionDto> updateTelevision(@PathVariable Long id, @Valid @RequestBody TelevisionInputDto newTelevision) {
+
+        //Call the service layer to update a Television.
+        TelevisionDto dto = service.updateTelevision(id, newTelevision);
+
+            return new ResponseEntity<>( dto, HttpStatus.OK);
         }
 
-        //Definieer de POST-methode addTelevision(TelevisionDto dto), die een nieuwe televisie aan de database toevoegt en een HTTP-respons van het type ResponseEntity<String> retourneert.
-    // Hierbij wordt de service.addTelevision(dto)-methode gebruikt om een nieuwe televisie aan de database toe te voegen en er wordt een boodschap "Television added successfully" opgenomen in de HTTP-respons met HTTP-status CREATED.
+
+        //Define a POST-method addTelevision(),  which adds new Televisions to the database and returns HTTP-respons  of the type ResponseEntity<TelevisionDto>.
+    //Add validation to the  request body because this is an inputDto which needs to be checked.
+    //Also, the parameter has become a dto.
     @PostMapping
-    public ResponseEntity<String> addTelevision(@RequestBody TelevisionDto dto) {
-        service.addTelevision(dto);
-        return new ResponseEntity<>("Television added successfully", HttpStatus.CREATED);
+    public ResponseEntity<TelevisionDto> addTelevision(@Valid @RequestBody TelevisionInputDto televisionInputDto) {
+
+        //Use methods of the service class instead of the repository to add Televisions and store it in a variable called dto of the type TelevisionDto
+       TelevisionDto dto =  service.addTelevision(televisionInputDto);
+
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
-    //Definieer de DELETE-methode deleteTelevision(int id), die een televisie uit de database verwijdert en een HTTP-respons van het type ResponseEntity<String> retourneert. Hierbij wordt de `service.removeTelevision methode gebruikt om een televisie te verwijderen uit de database.
+
+    //Define a DELETE-method deleteTelevision(), which deletes a Television from the database and returns an HTTP-response of type ResponseEntity<Object>.
+    // Use the deleteTelevision method from the service layer to delete a Television from the database.
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTelevision(@PathVariable Long id) {
-        service.removeTelevision((long) Math.toIntExact(id));
-            return new ResponseEntity<>("Television deleted successfully", HttpStatus.OK);
+    public ResponseEntity<Object> deleteTelevision(@PathVariable Long id) {
+
+        //Call the service layer directly instead of the repository/
+        service.removeTelevision(id);
+
+            return new ResponseEntity<>("Television deleted successfully", HttpStatus.NO_CONTENT);
         }
 }

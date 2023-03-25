@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.CONFLICT)
-public class ConflictException extends RuntimeException {
+public class TelevisionNameTooLongException extends RuntimeException {
     //The class includes a constructor that takes a single parameter, a String message.
-    public ConflictException(String message) {
+    public TelevisionNameTooLongException(String message) {
         super(message);
     }}
